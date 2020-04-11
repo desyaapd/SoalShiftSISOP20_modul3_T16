@@ -1,44 +1,210 @@
 # SoalShiftSISOP20_modul3_T16
 
-- I Gede Arimbawa Putra Teja Wardana -- 05311840000045
-- Desya Ananda Puspita Dewi -- 05311840000046
+1. I Gede Arimbawa Putra Teja Wardana - 05311840000045
+2. Desya Ananda Puspita Dewi - 05311840000046
+
+## Soal 3
+
+Buatlah sebuah program dari C untuk mengkategorikan file. Program ini akan memindahkan file sesuai ekstensinya (tidak case sensitive. JPG dan jpg adalah sama) ke dalam folder sesuai ekstensinya yang folder hasilnya terdapat di working directory ketika program kategori tersebut dijalankan. 
+
+Program ini memiliki ketentuan untuk beberapa opsi yang tersedia yakni :
+- `-f` untuk kategorisasi file yang telah ditentukan 
+- `-d` untuk kategorisasi di folder yang telah ditentukan 
+- `\*` untuk kategorisasi di folder dimana program tersebut berada
+
+**Penyelesaian:**
+
+___Source code :[ Soal3.c ](https://github.com/desyaapd/SoalShiftSISOP20_modul3_T16/blob/master/soal3/soal3.c)___
+
+```bash
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <ctype.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <dirent.h>
+
+char *getNamaFile(char *fName, char buff[]) {
+  char *token = strtok(fName, "/");
+  while (token != NULL) {
+    sprintf(buff, "%s", token);
+    token = strtok(NULL, "/");
+  }
+}
+```
+
+Setelah menuliskan beberapa library yang membantu jalannya program, kita akan mendapatkan nama dari file tersebut dengan menggunakan fungsi `*getNamaFile`
+
+```bash
+char *getExtension(char *fName, char buff[]) {
+  char buffNamaFile[1337];
+  char *token = strtok(fName, "/");
+  while (token != NULL) {
+    sprintf(buffNamaFile, "%s", token);
+    token = strtok(NULL, "/");
+  }
+  ```
+ 
+ - Selain mendapatkan namadari file, kita juga harus mendapatkan ekstensi dari file sebagai kunci untuk melakukan kateorisasi tiap file
+ 
+  ```bash
+  if (count <= 1) {
+    strcpy(buff, "unknown");
+  }
+
+  return buff;
+}
+```
+
+- Setelah mendapatkan ekstensinya, maka ekstensi akan ditampilkan dalam `buffer` . jika terdapat file yang tidak memiliki ekstensi, maka `buffer` akan berisi `"unknown"`
+
+```bash
+void dirChecking(char buff[]) {
+  DIR *dr = opendir(buff);
+  if (ENOENT == errno) {
+    mkdir(buff, 0775);
+    closedir(dr);
+  }
+}
+```
+
+- Berikutnya, akan dilakukan pembuatan direktori baru dengan fungsi `mkdir`, setelah itu nama dari direktori tersebut akan disimpan didalam `buffer`
+
+```bash
+  if (access(buffFrom, F_OK) == -1) {
+    printf("File %s tidak ada\n", buffFrom);
+    pthread_exit(0);
+  }
+  DIR* dir = opendir(buffFrom);
+  if (dir) {
+    printf("file %s berupa folder\n", buffFrom);
+    pthread_exit(0);
+  }
+  closedir(dir);
+  ```
+  - Lalu, program akan melakukan pengecekan terhadap ekstensi dan file yang telah diinputkan oleh user
+  - kemudian terdapat pemanggilan fungsi `getNamaFile` yang namanya tersimpan di dalam `buffer` kemudian berpindah ke `buffNamaFile`, sama halnya dengan `getExtension` untuk mengambil setiap ekstensi yang berada di `buffFrom` 
+  
+```bash
+int main(int argc, char *argv[]) {
+  if (argc == 1) {
+    printf("Argument kurang\n");
+    exit(1);
+  }
+  if (strcmp(argv[1], "-f") != 0 && strcmp(argv[1], "*") != 0 && strcmp(argv[1], "-d")) {
+    printf("Argument tidak ada\n");
+    exit(1);
+  }
+
+  if (strcmp(argv[1], "-f") == 0) {
+    if (argc <= 2) {
+      printf("Argument salah\n");
+      exit(1);
+    }
+
+    pthread_t tid[argc-2];
+    for (int i = 2; i < argc; i++) {
+      pthread_create(&tid[i-2], NULL, &routine, (void *)argv[i]);
+    }
+    for (int i = 2; i < argc; i++) {
+      pthread_join(tid[i-2], NULL);
+    }
+    exit(0);
+  }
+  ```
+  - Dalam fungsi `main` terdapat beberapa fungsi untuk melakukan pengecekan untuk setiap argumen yang diinputkan.
+  
+  - Code di atas akan menampilkan "Argumen Kurang" apabila argumen yang diberikan tidaklah berjumlah dua argumen. Dalam program ini, user diminta untuk menginputkan dua argumen yakni `argc` dan `argv`.
+
+   - Apabila argumen yang diinputkan oleh user tidak sesuai dengan ketentuan argumen yang diminta oleh soal maka program akan menampilkan bahwa "Argumen tidak ada" atau "Argumen salah". Code berikut untuk argumen `-f` 
+```bash
+  char *directory;
+  if (strcmp(argv[1], "*") == 0) {
+    if (argc != 2) {
+      printf("Argument salah\n");
+      exit(1);
+    }
+    char buff[1337];
+    getcwd(buff, sizeof(buff));
+    directory = buff;
+  }
+  ```
+  - Apabila argumen yang diinputkan oleh user tidak sesuai dengan ketentuan argumen yang diminta oleh soal maka program akan menampilkan bahwa "Argumen tidak ada" atau "Argumen salah". Code berikut untuk argumen `*` 
+  
+```bash
+  if (strcmp(argv[1], "-d") == 0) {
+    if (argc != 3) {
+      printf("Argument salah\n");
+      exit(1);
+    }
+    DIR* dir = opendir(argv[2]);
+    if (dir) {
+      directory = argv[2];
+    } else if (ENOENT == errno) {
+      printf("Directory tidak ada\n");
+      exit(1);
+    }
+    closedir(dir);
+  }
+  ```  
+  
+  - Apabila argumen yang diinputkan oleh user tidak sesuai dengan ketentuan argumen yang diminta oleh soal maka program akan menampilkan bahwa "Argumen tidak ada" atau "Argumen salah". Code berikut untuk argumen `-d` 
+
+```bash
+  pthread_t tid[file_count];
+  char buff[file_count][1337];
+  int iter = 0;
+
+  dir = opendir(directory);
+  while ((entry = readdir(dir)) != NULL) {
+    if (entry->d_type == DT_REG) {
+      sprintf(buff[iter], "%s/%s", directory, entry->d_name);
+      iter++;
+    }
+  }
+  closedir(dir);
+```
+
+- Perlu diketahui bahwa untuk menyimpan _absolute path_ dan variabel iterasi, kita telah membuat buffer. Nilai `tid` telah diatur sejumlah nilai pada counter per direktori untuk thread yang dibuat.
+
+```bash
+  for (int i = 0; i < file_count; i++) {
+    char  *test = (char*)buff[i];
+    printf("%s\n", test);
+    pthread_create(&tid[i], NULL, &routine, (void *)test);
+  }
+
+  for (int i = 0; i < file_count; i++) {
+    pthread_join(tid[i], NULL);
+  }
+}
+```
+
+- Looping akan terus terjadi sejumlah file yang telah tersimpan di dalam buffer. Sebelum menjalankan program ini pada thread, kita harus melakukan penyimpanan _absolute path_ dari setiap file. Dan pada code berikut ini juga terdapat code untuk membuat thread yakni `pthread_create(&tid[i], NULL, &routine, (void *)test);`
+
+- Terakhir terdapat proses looping yang melakukan `pthread_join` yaitu proses join untuk setiap thread yang telah dibuat
+
+**Output `-f`**
+
+![Capture](https://github.com/desyaapd/SoalShiftSISOP20_modul3_T16/blob/master/image/soal3_1.PNG)
+
+**Output `\*`**
+
+![Capture](https://github.com/desyaapd/SoalShiftSISOP20_modul3_T16/blob/master/image/soal3_2.PNG)
+
+**Output `-d`**
+
+![Capture](https://github.com/desyaapd/SoalShiftSISOP20_modul3_T16/blob/master/image/soal3_3.PNG)
 
 
 ## Soal 4
 Norland adalah seorang penjelajah terkenal. Pada suatu malam Norland menyusuri jalan setapak menuju ke sebuah gua dan mendapati tiga pilar yang pada setiap pilarnya ada sebuah batu berkilau yang tertancap. Batu itu berkilau di kegelapan dan setiap batunya memiliki warna yang berbeda. 
 
 Norland mendapati ada sebuah teka-teki yang tertulis di setiap pilar. Untuk dapat mengambil batu mulia di suatu pilar, Ia harus memecahkan teka-teki yang ada di pilar tersebut. Norland menghampiri setiap pilar secara bergantian. 
-
--	**Batu mulia pertama. Emerald**. Batu mulia yang berwarna hijau mengkilat. Pada batu itu Ia menemukan sebuah kalimat petunjuk. Ada sebuah teka-teki yang berisi: 
-
-1. Buatlah program C dengan nama "4a.c", yang berisi program untuk melakukan perkalian matriks. Ukuran matriks pertama adalah 4x2, dan matriks kedua 2x5. Isi dari matriks didefinisikan di dalam kodingan. Matriks nantinya akan berisi angka 1-20 (tidak perlu dibuat filter angka). 
-
-2. Tampilkan matriks hasil perkalian tadi ke layar. 
-
--	**Batu kedua adalah Amethyst**. Batu mulia berwarna ungu mengkilat. Teka-tekinya adalah: 
-
-1. Buatlah program C kedua dengan nama "4b.c". Program ini akan mengambil variabel hasil perkalian matriks dari program "4a.c" (program sebelumnya), dan tampilkan hasil matriks tersebut ke layar. 
-(Catatan!: gunakan shared memory) 
-
-2. Setelah ditampilkan, berikutnya untuk setiap angka dari matriks tersebut, carilah nilai faktorialnya, dan tampilkan hasilnya ke layar dengan format seperti matriks. 
-
-Contoh: misal array [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], ...], maka: 
-1 2 6 24 120 720 ... ... ... (Catatan! : Harus menggunakan Thread dalam penghitungan faktorial) 
-
--	**Batu ketiga adalah Onyx**. Batu mulia berwarna hitam mengkilat. Pecahkan teka-teki berikut! 
-
-1. Buatlah program C ketiga dengan nama "4c.c". Program ini tidak 
-memiliki hubungan terhadap program yang lalu. 
-
-2. Pada program ini, Norland diminta mengetahui jumlah file dan folder di direktori saat ini dengan command `ls | wc –l`. Karena sudah belajar IPC, Norland mengerjakannya dengan semangat. 
-
-(Catatan! : Harus menggunakan IPC Pipes) 
-
-Begitu batu terakhir berhasil didapatkan. Gemuruh yang semakin lama semakin besar terdengar. Seluruh tempat berguncang dahsyat, tanah mulai merekah. Sebuah batu yang di atasnya terdapat kotak kayu muncul ke atas dengan sendirinya. 
-
-Sementara batu tadi kembali ke posisinya. Tanah kembali menutup, seolah tidak pernah ada lubang merekah di atasnya satu detik lalu. 
-
-Norland segera memasukkan tiga buah batu mulia Emerald, Amethys, Onyx pada Peti Kayu. Maka terbukalah Peti Kayu tersebut. Di dalamnya terdapat sebuah harta karun rahasia. Sampai saat ini banyak orang memburu harta karun tersebut. Sebelum menghilang, dia menyisakan semua petunjuk tentang harta karun tersebut melalui tulisan dalam buku catatannya yang tersebar di penjuru dunia. "One Piece does exist".
 
 
 ### Soal 4a.c
@@ -288,3 +454,8 @@ pipe(fd);
 **Output**
 
 ![Capture](https://github.com/desyaapd/SoalShiftSISOP20_modul3_T16/blob/master/image/soal4c.PNG)
+
+
+### Kendala
+
+- Soalnya terlalu panjang, sehingga susah untuk kami memahami serta menemukan inti dari persoalan dengan cepat, dimohon apabila membuat soal jangan sesusah yang nomor 1 2 3 ya mas hehehee
