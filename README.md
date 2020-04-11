@@ -3,6 +3,7 @@
 - I Gede Arimbawa Putra Teja Wardana -- 05311840000045
 - Desya Ananda Puspita Dewi -- 05311840000046
 
+
 # Soal 4
 Norland adalah seorang penjelajah terkenal. Pada suatu malam Norland menyusuri jalan setapak menuju ke sebuah gua dan mendapati tiga pilar yang pada setiap pilarnya ada sebuah batu berkilau yang tertancap. Batu itu berkilau di kegelapan dan setiap batunya memiliki warna yang berbeda. 
 
@@ -38,6 +39,7 @@ Begitu batu terakhir berhasil didapatkan. Gemuruh yang semakin lama semakin besa
 Sementara batu tadi kembali ke posisinya. Tanah kembali menutup, seolah tidak pernah ada lubang merekah di atasnya satu detik lalu. 
 
 Norland segera memasukkan tiga buah batu mulia Emerald, Amethys, Onyx pada Peti Kayu. Maka terbukalah Peti Kayu tersebut. Di dalamnya terdapat sebuah harta karun rahasia. Sampai saat ini banyak orang memburu harta karun tersebut. Sebelum menghilang, dia menyisakan semua petunjuk tentang harta karun tersebut melalui tulisan dalam buku catatannya yang tersebar di penjuru dunia. "One Piece does exist".
+
 
 ### Soal 4a.c
 ___Source code :[ Soal4a.c ](https://github.com/desyaapd/SoalShiftSISOP20_modul3_T16/blob/master/soal4/soal4a.c)___
@@ -131,9 +133,13 @@ for (j = 0; j < 5; j++) {
 
 -	Kemudian, kami melakukan printf dengan `printf(“%2d ”, matC[i][j]);` yang akan melakukan for() loop untuk masing masing baris serta kolom sebanyak jumlahnya, dimana `i` merupakan baris sebanyak 4 dan `j` merupakan kolom sebanyak 5.
 
+**Output**
+
+![Capture](https://github.com/desyaapd/SoalShiftSISOP20_modul3_T16/blob/master/image/soal4a.PNG)
+
 
 ### Soal 4b.c
-___Source code : [ Soal4b.c ] (https://github.com/desyaapd/SoalShiftSISOP20_modul3_T16/blob/master/soal4/soal4b.c)___
+___Source code : [ Soal4b.c ](https://github.com/desyaapd/SoalShiftSISOP20_modul3_T16/blob/master/soal4/soal4b.c)___
 
 -	Buatlah program C kedua dengan nama "4b.c". Program ini akan mengambil variabel hasil perkalian matriks dari program "4a.c" (program sebelumnya), dan tampilkan hasil matriks tersebut ke layar. 
 
@@ -218,3 +224,67 @@ printf("MATRIKS :\n");
 -	`shmctl(shmid, IPC_RMID, NULL);` kemudian dengan `IPC_RMID` digunakan untuk menghapus memori bersama yang telah berada dalam parameter `shmid	` lalu melampirkan hasil dari segmen memori bersama terakhir yang akan kembali ke `shmctl`,
 
 -	Kemudian, kami melakukan printf dengan `printf(“%2d ”, matC[i][j]);` yang akan melakukan for() loop untuk masing masing baris serta kolom sebanyak jumlahnya, dimana `i` merupakan baris sebanyak 4 dan `j` merupakan kolom sebanyak 5.
+
+**Output**
+
+![Capture](https://github.com/desyaapd/SoalShiftSISOP20_modul3_T16/blob/master/image/soal4b.png)
+
+
+### Soal 4c.c
+___Source code : [ Soal4c.c ](https://github.com/desyaapd/SoalShiftSISOP20_modul3_T16/blob/master/soal4/soal4c.c)___
+
+-	Buatlah program C ketiga dengan nama "4c.c". Program ini tidak memiliki hubungan terhadap program yang lalu. 
+
+-	Pada program ini, Norland diminta mengetahui jumlah file dan folder di direktori saat ini dengan command `ls | wc –l`. Karena sudah belajar IPC, Norland mengerjakannya dengan semangat. 
+
+(Catatan! : Harus menggunakan IPC Pipes) 
+
+**Penjelasan:**
+
+Program ini merupakan program yang akan menampilkan banyaknya file yang berada di dalam direktori yang sedang aktif pada saat itu dengan menggunakan IPC pipes
+
+```bash
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+int main() {
+  int fd[2];
+  pid_t pid;
+pipe(fd);
+```
+- Program ini dijalankan dengan menggunakan **IPC Pipes**, sehingga yang pertama kali yang haru sdilakukan yaitu mendeklarasikan pipes tersebut dengan `pipe (fd)`
+
+- `fd` merupakan _file descriptor_ yang berjumlah 2 untuk menjalankan 2 pipes untuk fungsi _read_ fan untuk fungsi _write_
+
+```bash
+  pid = fork();
+  if (pid == 0) {
+    dup2(fd[1], 1);
+    close(fd[0]);
+    char *argv[] = {"ls", NULL};
+    execv("/bin/ls", argv);
+  }
+  while(wait(NULL) > 0);
+```
+- Terdapat fungsi `fork()` untuk parent processnya, ia akan membuat copy terhadap `fd[1]` dimana `[1]` merupakan fungsi _write end_ dari pipe
+
+- Kemudian `ls` disini akan menampilkan dema `dir` dan 	`file` yang tersimpan dalam pointer `*argv` yang akan berjalan satu kali saja, sehingga child process harus menunggu fungsi parent process dengan `while(wait(NULL) > 0);`
+
+```bash
+  dup2(fd[0], 0);
+  close(fd[1]);
+  char *argv[] = {"wc", "-l", NULL};
+  execv("/usr/bin/wc", argv);
+}
+```
+- `dup2(fd[0], 0);` merupakan fungsi _read_ dari pipe baru sehingga ia akan menjadi input baru dengan melakukan perintah `{"wc", "-l", NULL};` yang berfungsi untuk menghitung banyaknya file dan folder yang berada di direktori yang akan di set oleh pointer `*argv[]`
+
+- Terakhir, program akan menjalankan `execv("/usr/bin/wc", argv);` yang kemudian akan menampilkan jumlah perhitungannya apabila dijalankan
+ 
+**Output**
+
+![Capture](https://github.com/desyaapd/SoalShiftSISOP20_modul3_T16/blob/master/image/soal4c.PNG)
